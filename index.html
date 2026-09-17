@@ -1,0 +1,530 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Painel de variáveis de controle do projeto EvoluaSeguro: métricas de fluxo, análise de valor agregado (EVMS), queima de escopo e indicadores de qualidade.">
+<meta name="color-scheme" content="light dark">
+<meta property="og:title" content="Painel EvoluaSeguro — SMAS">
+<meta property="og:description" content="Painel de variáveis de controle do projeto EvoluaSeguro: métricas de fluxo, análise de valor agregado (EVMS), queima de escopo e indicadores de qualidade.">
+<meta property="og:type" content="website">
+<title>Painel EvoluaSeguro — SMAS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Public+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+:root{
+  color-scheme: light;
+  --ground:#f2f5f8; --surface:#ffffff; --surface-2:#eaeff4;
+  --line:#d3dce4; --line-soft:#e4eaf0;
+  --ink:#101f2c; --ink-2:#4c6072; --ink-3:#7d8fa0;
+  --navy:#1f3a5f; --navy-ink:#ffffff;
+  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a;
+  --good:#157f5a; --warn:#a86b00; --bad:#b23b3b;
+  --good-bg:#e4f1ea; --warn-bg:#f8efdc; --bad-bg:#f8e6e6;
+  --grid:#e7edf3;
+  --shadow:0 1px 2px rgba(16,31,44,.06);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme: dark;
+    --ground:#0e161d; --surface:#151f28; --surface-2:#1c2833;
+    --line:#2b3945; --line-soft:#222e39;
+    --ink:#eef3f7; --ink-2:#9fb1c1; --ink-3:#74889a;
+    --navy:#152a44; --navy-ink:#eaf1f8;
+    --s1:#3987e5; --s2:#d95926; --s3:#199e70;
+    --good:#3fa77c; --warn:#d09a2c; --bad:#e07070;
+    --good-bg:#16302a; --warn-bg:#332a16; --bad-bg:#331f1f;
+    --grid:#22303c;
+    --shadow:0 1px 2px rgba(0,0,0,.35);
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme: dark;
+  --ground:#0e161d; --surface:#151f28; --surface-2:#1c2833;
+  --line:#2b3945; --line-soft:#222e39;
+  --ink:#eef3f7; --ink-2:#9fb1c1; --ink-3:#74889a;
+  --navy:#152a44; --navy-ink:#eaf1f8;
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70;
+  --good:#3fa77c; --warn:#d09a2c; --bad:#e07070;
+  --good-bg:#16302a; --warn-bg:#332a16; --bad-bg:#331f1f;
+  --grid:#22303c;
+  --shadow:0 1px 2px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);
+ font-family:"Public Sans",system-ui,-apple-system,Segoe UI,sans-serif;font-size:14px;line-height:1.55}
+.wrap{max-width:1180px;margin:0 auto;padding:0 20px 56px}
+
+/* ---------- header ---------- */
+header{background:var(--navy);color:var(--navy-ink);border-bottom:3px solid var(--s1)}
+.hd{max-width:1180px;margin:0 auto;padding:22px 20px 20px;display:flex;flex-wrap:wrap;
+ gap:18px;align-items:flex-end;justify-content:space-between}
+.hd h1{font-family:Archivo,system-ui,sans-serif;font-weight:700;font-size:26px;
+ letter-spacing:-.02em;margin:0 0 3px;text-wrap:balance}
+.hd .eyebrow{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:10.5px;
+ letter-spacing:.14em;text-transform:uppercase;opacity:.72;margin:0 0 6px}
+.hd .meta{font-size:12.5px;opacity:.8;margin:0}
+.hd-right{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.verdict{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.22);
+ border-radius:4px;padding:9px 14px;min-width:150px}
+.verdict .k{font-family:"IBM Plex Mono",monospace;font-size:9.5px;letter-spacing:.12em;
+ text-transform:uppercase;opacity:.7;display:block}
+.verdict .v{font-family:Archivo,sans-serif;font-weight:600;font-size:17px;
+ font-variant-numeric:tabular-nums}
+
+/* ---------- section ---------- */
+.sec{margin:34px 0 0}
+.sec-hd{display:flex;align-items:baseline;gap:14px;margin:0 0 4px}
+.sec-hd h2{font-family:Archivo,sans-serif;font-size:16px;font-weight:600;letter-spacing:-.01em;margin:0}
+.sec-hd .num{font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--s1);font-weight:600}
+.sec-hd .rule{flex:1;height:1px;background:var(--line)}
+.sec-sub{color:var(--ink-2);font-size:12.5px;margin:0 0 14px;max-width:78ch}
+
+/* ---------- kpi ---------- */
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:4px;
+ padding:12px 14px 11px;box-shadow:var(--shadow);position:relative;overflow:hidden}
+.kpi.off::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--warn)}
+.kpi.crit::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--bad)}
+.kpi .k{font-family:"IBM Plex Mono",monospace;font-size:9.5px;letter-spacing:.1em;
+ text-transform:uppercase;color:var(--ink-3);display:block;margin-bottom:5px}
+.kpi .v{font-family:Archivo,sans-serif;font-size:25px;font-weight:600;line-height:1;
+ font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.kpi .u{font-size:12px;color:var(--ink-2);font-weight:400;margin-left:3px}
+.kpi .foot{display:flex;align-items:center;gap:6px;margin-top:7px;font-size:11px;color:var(--ink-2)}
+.pill{font-family:"IBM Plex Mono",monospace;font-size:9.5px;font-weight:600;padding:1.5px 6px;
+ border-radius:3px;letter-spacing:.03em;white-space:nowrap}
+.pill.g{background:var(--good-bg);color:var(--good)}
+.pill.w{background:var(--warn-bg);color:var(--warn)}
+.pill.b{background:var(--bad-bg);color:var(--bad)}
+
+/* ---------- panels ---------- */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.grid3{display:grid;grid-template-columns:1.35fr 1fr;gap:14px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:4px;
+ box-shadow:var(--shadow);display:flex;flex-direction:column;overflow:hidden}
+.panel-hd{padding:13px 16px 0}
+.panel-hd h3{font-family:Archivo,sans-serif;font-size:13.5px;font-weight:600;margin:0 0 2px}
+.panel-hd p{margin:0;font-size:11.5px;color:var(--ink-2)}
+.legend{display:flex;flex-wrap:wrap;gap:12px;padding:9px 16px 2px}
+.lg{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--ink-2)}
+.sw{width:11px;height:3px;border-radius:2px;flex:none}
+.sw.d{height:9px;width:9px;border-radius:2px}
+.chartbox{position:relative;padding:2px 8px 4px}
+svg.chart{display:block;width:100%;height:auto;overflow:visible}
+.tip{position:absolute;pointer-events:none;opacity:0;transition:opacity .1s;
+ background:var(--surface);border:1px solid var(--line);border-radius:4px;
+ box-shadow:0 3px 10px rgba(16,31,44,.14);padding:7px 9px;font-size:11px;
+ min-width:118px;z-index:6;transform:translate(-50%,-100%)}
+.tip .th{font-family:"IBM Plex Mono",monospace;font-size:9.5px;letter-spacing:.08em;
+ text-transform:uppercase;color:var(--ink-3);margin-bottom:4px}
+.tip .tr{display:flex;align-items:center;gap:6px;justify-content:space-between;line-height:1.5}
+.tip .tr span:last-child{font-family:"IBM Plex Mono",monospace;font-weight:600;
+ font-variant-numeric:tabular-nums;color:var(--ink)}
+.tip .nm{display:flex;align-items:center;gap:5px;color:var(--ink-2)}
+.decision{margin-top:auto;border-top:1px solid var(--line-soft);background:var(--surface-2);
+ padding:9px 16px 10px;font-size:11.5px;color:var(--ink-2);line-height:1.5}
+.decision b{font-family:"IBM Plex Mono",monospace;font-size:9.5px;letter-spacing:.1em;
+ text-transform:uppercase;color:var(--ink-3);display:block;margin-bottom:2px;font-weight:600}
+
+/* ---------- evms table ---------- */
+.tbl{width:100%;border-collapse:collapse;font-size:11.5px}
+.tbl th{text-align:right;font-family:"IBM Plex Mono",monospace;font-size:9.5px;
+ letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);font-weight:600;
+ padding:6px 8px;border-bottom:1px solid var(--line)}
+.tbl th:first-child,.tbl td:first-child{text-align:left}
+.tbl td{padding:5px 8px;border-bottom:1px solid var(--line-soft);text-align:right;
+ font-variant-numeric:tabular-nums;font-family:"IBM Plex Mono",monospace}
+.tbl td:first-child{font-family:"Public Sans",sans-serif}
+.tbl tr:last-child td{border-bottom:none}
+.tbl .em td{font-weight:600;color:var(--ink);background:var(--surface-2)}
+.tblwrap{overflow-x:auto;padding:8px 16px 12px}
+
+/* ---------- data toggle ---------- */
+.toolbar{display:flex;justify-content:flex-end;padding-top:10px}
+button.tgl{font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.06em;
+ text-transform:uppercase;background:var(--surface);color:var(--ink-2);
+ border:1px solid var(--line);border-radius:4px;padding:6px 11px;cursor:pointer}
+button.tgl:hover{border-color:var(--s1);color:var(--s1)}
+button.tgl:focus-visible{outline:2px solid var(--s1);outline-offset:2px}
+#datatables{margin-top:14px}
+#datatables .panel{padding-bottom:4px}
+footer.pg{margin-top:38px;padding-top:16px;border-top:1px solid var(--line);
+ font-size:11.5px;color:var(--ink-3);display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap}
+
+@media (max-width:900px){
+  .kpis{grid-template-columns:repeat(2,1fr)}
+  .grid2,.grid3{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+<style>
+/* regras que o host do Claude fornecia e que agora acompanham a pagina */
+[hidden]{display:none!important}
+img{max-width:100%}
+.toolbar{gap:8px}
+</style>
+</head>
+<body>
+<header>
+  <div class="hd">
+    <div>
+      <p class="eyebrow">Sistema de Medição e Análise de Software · Etapa 5</p>
+      <h1>EvoluaSeguro — Painel de Variáveis de Controle</h1>
+      <p class="meta">Ciclo 2 · 6 sprints de 2 semanas · Escopo planejado: 64 itens · Orçamento (BAC): R$ 96.000</p>
+    </div>
+    <div class="hd-right">
+      <div class="verdict"><span class="k">Prazo — SPI</span><span class="v">0,91</span></div>
+      <div class="verdict"><span class="k">Custo — CPI</span><span class="v">0,91</span></div>
+      <div class="verdict"><span class="k">Previsão final</span><span class="v">R$ 105.380</span></div>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+<div class="toolbar"><button class="tgl" id="themebtn" type="button">Tema: automático</button><button class="tgl" id="tblbtn" aria-expanded="false">Ver dados em tabela</button></div>
+
+<!-- ============ KPIs ============ -->
+<section class="sec" style="margin-top:14px">
+  <div class="sec-hd"><span class="num">01</span><h2>Indicadores de fechamento do ciclo</h2><span class="rule"></span></div>
+  <p class="sec-sub">Situação ao final do Sprint 6, comparada à linha de base do Sprint 1 e às metas fixadas nas Etapas 2 a 4. A faixa lateral colorida marca o indicador que ainda não atingiu a meta.</p>
+  <div class="kpis" id="kpis"></div>
+</section>
+
+<!-- ============ FLUXO ============ -->
+<section class="sec">
+  <div class="sec-hd"><span class="num">02</span><h2>Métricas de fluxo</h2><span class="rule"></span></div>
+  <p class="sec-sub">Medem a velocidade e a previsibilidade da entrega. Lead Time conta da priorização no backlog até a produção; Cycle Time conta do início do desenvolvimento até a produção; Throughput conta itens concluídos por sprint.</p>
+  <div class="grid2">
+
+    <div class="panel">
+      <div class="panel-hd"><h3>Lead Time e Cycle Time</h3><p>Média por sprint, em dias corridos</p></div>
+      <div class="legend">
+        <span class="lg"><span class="sw" style="background:var(--s1)"></span>Lead Time (médio)</span>
+        <span class="lg"><span class="sw" style="background:var(--s2)"></span>Cycle Time (médio)</span>
+        <span class="lg"><span class="sw" style="background:var(--s3)"></span>Cycle Time (percentil 85)</span>
+      </div>
+      <div class="chartbox" id="c-lt"></div>
+      <div class="decision"><b>Decisão que apoia</b>Com Cycle Time p85 em 7,9 dias, o gerente pode assumir compromisso de prazo com 85% de confiança — "entregamos em até 8 dias úteis" deixa de ser promessa e passa a ser previsão. A queda da razão p85/média de 1,70 para 1,49 indica que o processo ficou mais <em>previsível</em>, não apenas mais rápido.</div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-hd"><h3>Throughput e Trabalho em Progresso</h3><p>Itens concluídos por sprint · WIP médio simultâneo</p></div>
+      <div class="legend">
+        <span class="lg"><span class="sw d" style="background:var(--s1)"></span>Throughput (itens/sprint)</span>
+        <span class="lg"><span class="sw" style="background:var(--s2)"></span>WIP médio</span>
+      </div>
+      <div class="chartbox" id="c-tp"></div>
+      <div class="decision"><b>Decisão que apoia</b>As duas curvas juntas demonstram a Lei de Little na prática: reduzir o WIP de 8,4 para 6,3 elevou o Throughput de 8 para 12 itens. É a evidência que autoriza o gerente a <em>recusar</em> trabalho novo em paralelo — limitar WIP entregou mais, não menos.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ EVMS ============ -->
+<section class="sec">
+  <div class="sec-hd"><span class="num">03</span><h2>Análise de valor agregado (EVMS) e queima de escopo</h2><span class="rule"></span></div>
+  <p class="sec-sub">O EVMS responde a duas perguntas que o Burn-down sozinho não responde: o quanto já foi entregue vale o que foi gasto, e a que custo o projeto terminará se nada mudar.</p>
+  <div class="grid3">
+
+    <div class="panel">
+      <div class="panel-hd"><h3>Valor Planejado, Agregado e Custo Real</h3><p>Curvas acumuladas em reais, ao longo do Ciclo 2</p></div>
+      <div class="legend">
+        <span class="lg"><span class="sw" style="background:var(--s1)"></span>PV — Valor Planejado</span>
+        <span class="lg"><span class="sw" style="background:var(--s3)"></span>EV — Valor Agregado</span>
+        <span class="lg"><span class="sw" style="background:var(--s2)"></span>AC — Custo Real</span>
+      </div>
+      <div class="chartbox" id="c-ev"></div>
+      <div class="decision"><b>Decisão que apoia</b>A curva EV abaixo de PV e de AC ao mesmo tempo significa: entrega-se menos do que o previsto e gasta-se mais do que o entregue vale. Com CPI 0,91, terminar o escopo custará R$ 105.380 (R$ 9.380 acima do orçado). O gerente tem três opções mensuráveis: aportar a diferença, cortar 6 itens de escopo ou estender o cronograma — e agora com número, não com intuição.</div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-hd"><h3>Burn-down de escopo</h3><p>Itens restantes: real × ideal</p></div>
+      <div class="legend">
+        <span class="lg"><span class="sw" style="background:var(--s1)"></span>Escopo restante (real)</span>
+        <span class="lg"><span class="sw" style="background:var(--ink-3)"></span>Linha ideal</span>
+      </div>
+      <div class="chartbox" id="c-bd"></div>
+      <div class="decision"><b>Decisão que apoia</b>A distância constante entre as curvas mostra que o atraso foi <em>acumulado no início</em> e nunca recuperado. Sinaliza ao gerente que replanejar cedo teria custado menos do que acelerar no fim.</div>
+    </div>
+  </div>
+
+  <div class="panel" style="margin-top:14px">
+    <div class="panel-hd"><h3>Memória de cálculo do valor agregado</h3><p>Fechamento do Sprint 6 · BAC = R$ 96.000 · 64 itens planejados, 58 entregues</p></div>
+    <div class="tblwrap">
+      <table class="tbl">
+        <thead><tr><th>Indicador</th><th>Fórmula</th><th>Cálculo</th><th>Resultado</th><th>Leitura</th></tr></thead>
+        <tbody>
+          <tr><td>Valor Planejado (PV)</td><td>BAC × % planejado</td><td>96.000 × 100%</td><td>R$ 96.000</td><td>—</td></tr>
+          <tr><td>Valor Agregado (EV)</td><td>BAC × % concluído</td><td>96.000 × 90,6%</td><td>R$ 87.000</td><td>—</td></tr>
+          <tr><td>Custo Real (AC)</td><td>Soma dos gastos</td><td>—</td><td>R$ 95.500</td><td>—</td></tr>
+          <tr><td>Variação de Prazo (SV)</td><td>EV − PV</td><td>87.000 − 96.000</td><td>−R$ 9.000</td><td>Atrasado</td></tr>
+          <tr><td>Variação de Custo (CV)</td><td>EV − AC</td><td>87.000 − 95.500</td><td>−R$ 8.500</td><td>Acima do orçado</td></tr>
+          <tr><td>Índice de Prazo (SPI)</td><td>EV ÷ PV</td><td>87.000 ÷ 96.000</td><td>0,91</td><td>9% mais lento</td></tr>
+          <tr><td>Índice de Custo (CPI)</td><td>EV ÷ AC</td><td>87.000 ÷ 95.500</td><td>0,91</td><td>R$ 0,91 de valor por R$ 1,00 gasto</td></tr>
+          <tr class="em"><td>Estimativa no Término (EAC)</td><td>BAC ÷ CPI</td><td>96.000 ÷ 0,911</td><td>R$ 105.380</td><td>Custo projetado final</td></tr>
+          <tr class="em"><td>Variação no Término (VAC)</td><td>BAC − EAC</td><td>96.000 − 105.380</td><td>−R$ 9.380</td><td>Estouro projetado de 9,8%</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="decision"><b>Decisão que apoia</b>SPI e CPI transformam "estamos atrasados" em uma taxa. Como ambos convergiram de 0,73–0,80 para 0,91 ao longo do ciclo, a tendência é de recuperação — o que sustenta a decisão de <em>manter</em> o plano corrente em vez de reestruturar a equipe no meio do caminho.</div>
+  </div>
+</section>
+
+<!-- ============ QUALIDADE ============ -->
+<section class="sec">
+  <div class="sec-hd"><span class="num">04</span><h2>Variáveis de controle da qualidade</h2><span class="rule"></span></div>
+  <p class="sec-sub">Fluxo e custo medem a entrega; estas medem se a entrega é sustentável. Sem elas, um Throughput crescente pode significar apenas que a equipe passou a entregar defeitos mais rápido.</p>
+  <div class="grid2">
+
+    <div class="panel">
+      <div class="panel-hd"><h3>Cobertura de testes e eficiência de remoção</h3><p>Módulos críticos (Pagamentos e Sinistros) · em %</p></div>
+      <div class="legend">
+        <span class="lg"><span class="sw" style="background:var(--s1)"></span>Cobertura de código</span>
+        <span class="lg"><span class="sw" style="background:var(--s3)"></span>DRE — defeitos contidos antes da produção</span>
+      </div>
+      <div class="chartbox" id="c-q"></div>
+      <div class="decision"><b>Decisão que apoia</b>A DRE cruzou a meta de 85% no Sprint 6, validando o investimento em automação aprovado na Etapa 4. Cobertura em 83% ainda está 2 p.p. abaixo do portão de liberação (G3), o que mantém o bloqueio de <em>release</em> ativo — decisão automática, sem negociação caso a caso.</div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-hd"><h3>Defeitos críticos que escaparam para produção</h3><p>Severidade S1 · por sprint</p></div>
+      <div class="legend">
+        <span class="lg"><span class="sw d" style="background:var(--bad)"></span>Defeitos S1 em produção</span>
+      </div>
+      <div class="chartbox" id="c-def"></div>
+      <div class="decision"><b>Decisão que apoia</b>Três sprints consecutivos sem escape crítico é o sinal que permite ao gerente reduzir a janela de <em>hotfix</em> de plantão e realocar capacidade para escopo novo. Um único sprint com escape reabre a discussão — por isso a métrica é lida por tendência, nunca por ponto isolado.</div>
+    </div>
+  </div>
+</section>
+
+<div id="datatables" hidden></div>
+
+<footer class="pg">
+  <span>Projeto Prático Integrador — SMAS · Etapa 5 de 7 · EvoluaSeguro</span>
+  <span>Dados do Ciclo 2 (hipotéticos, coerentes com as Etapas 1 a 4)</span>
+</footer>
+</div>
+
+<script>
+/* ================= dados ================= */
+const SP = ['S1','S2','S3','S4','S5','S6'];
+const D = {
+  leadTime:[21.5,19.5,22.6,16.6,14.5,12.5],
+  cycleTime:[10.0,8.6,10.5,7.2,6.2,5.3],
+  p85:[17.0,15.5,19.4,12.2,9.8,7.9],
+  throughput:[8,9,8,10,11,12],
+  wip:[8.0,7.7,8.4,7.2,6.8,6.3],
+  pv:[15000,31500,48000,64500,81000,96000],
+  ev:[12000,25500,37500,52500,69000,87000],
+  ac:[16500,34000,51500,67000,82500,95500],
+  bdReal:[64,56,47,39,29,18,6],
+  bdIdeal:[64,54,43,32,21,10,0],
+  cobertura:[31,38,45,58,71,83],
+  dre:[61.3,64,67,74,80,86],
+  s1prod:[2,1,1,0,0,0]
+};
+const BD_LBL = ['Início','S1','S2','S3','S4','S5','S6'];
+
+/* ================= KPIs ================= */
+const KPI = [
+ {k:'Lead Time',v:'12,5',u:'dias',d:'21,5 dias no S1',p:['g','−42%']},
+ {k:'Cycle Time',v:'5,3',u:'dias',d:'meta ≤ 6 dias',p:['g','atingida']},
+ {k:'Throughput',v:'12',u:'itens/sprint',d:'8 no S1',p:['g','+50%']},
+ {k:'WIP médio',v:'6,3',u:'itens',d:'limite acordado: 7',p:['g','dentro']},
+ {k:'SPI — prazo',v:'0,91',u:'',d:'meta ≥ 0,95',p:['w','atrasado'],cls:'off'},
+ {k:'CPI — custo',v:'0,91',u:'',d:'projeção: −R$ 9.380',p:['w','acima'],cls:'off'},
+ {k:'DRE',v:'86',u:'%',d:'meta ≥ 85%',p:['g','atingida']},
+ {k:'Cobertura crítica',v:'83',u:'%',d:'portão G3 exige 85%',p:['w','−2 p.p.'],cls:'off'}
+];
+document.getElementById('kpis').innerHTML = KPI.map(t=>`
+ <div class="kpi ${t.cls||''}">
+   <span class="k">${t.k}</span>
+   <span class="v">${t.v}${t.u?`<span class="u">${t.u}</span>`:''}</span>
+   <div class="foot"><span class="pill ${t.p[0]}">${t.p[1]}</span><span>${t.d}</span></div>
+ </div>`).join('');
+
+/* ================= motor de gráficos ================= */
+const W=580, H=252, P={t:16,r:40,b:30,l:46};
+const PW=W-P.l-P.r, PH=H-P.t-P.b;
+const cssv=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const svgEl=(n,a)=>{const e=document.createElementNS('http://www.w3.org/2000/svg',n);
+  for(const k in a)e.setAttribute(k,a[k]);return e;};
+const niceMax=v=>{const m=Math.max(...v);const p=Math.pow(10,Math.floor(Math.log10(m)));
+  const s=[1,1.25,1.5,2,2.5,3,4,5,7.5,10];for(const x of s){if(p*x>=m*1.06)return p*x;}return p*10;};
+
+function chart(host,{labels,series,bars=[],fmt=v=>v,yMax=null,ticks=5,dashIdx=[]}){
+  const box=document.getElementById(host);
+  const all=[...series.flatMap(s=>s.v),...bars.flatMap(b=>b.v)];
+  const YM = yMax!==null?yMax:niceMax(all);
+  const n=labels.length;
+  const X = i => P.l + (n===1?PW/2:PW*i/(n-1));
+  const XB = i => P.l + PW*(i+0.5)/n;
+  const Y = v => P.t + PH*(1-v/YM);
+  const svg=svgEl('svg',{viewBox:`0 0 ${W} ${H}`,class:'chart',role:'img'});
+
+  // grid + eixo y
+  for(let i=0;i<=ticks;i++){
+    const val=YM*i/ticks, y=Y(val);
+    svg.appendChild(svgEl('line',{x1:P.l,x2:W-P.r,y1:y,y2:y,stroke:cssv('--grid'),'stroke-width':1}));
+    const t=svgEl('text',{x:P.l-8,y:y+3.5,'text-anchor':'end','font-size':9.5,
+      fill:cssv('--ink-3'),'font-family':'IBM Plex Mono, monospace'});
+    t.textContent=fmt(val); svg.appendChild(t);
+  }
+  // eixo x
+  labels.forEach((l,i)=>{
+    const t=svgEl('text',{x:bars.length?XB(i):X(i),y:H-P.b+16,'text-anchor':'middle','font-size':10,
+      fill:cssv('--ink-2'),'font-family':'IBM Plex Mono, monospace'});
+    t.textContent=l; svg.appendChild(t);
+  });
+
+  // barras
+  bars.forEach(b=>{
+    const bw=Math.min(38,PW/n-10);
+    b.v.forEach((v,i)=>{
+      const h=Math.max(2,PH*v/YM);
+      svg.appendChild(svgEl('rect',{x:XB(i)-bw/2,y:Y(v),width:bw,height:h,rx:3,fill:b.c}));
+      if(v>0){const t=svgEl('text',{x:XB(i),y:Y(v)-6,'text-anchor':'middle','font-size':10,
+        'font-weight':600,fill:cssv('--ink-2'),'font-family':'IBM Plex Mono, monospace'});
+        t.textContent=b.lbl?b.lbl(v):v; svg.appendChild(t);}
+    });
+  });
+
+  // linhas
+  series.forEach((s,si)=>{
+    const px = bars.length?XB:X;
+    const d=s.v.map((v,i)=>`${i?'L':'M'}${px(i)},${Y(v)}`).join(' ');
+    svg.appendChild(svgEl('path',{d,fill:'none',stroke:s.c,'stroke-width':2,
+      'stroke-linejoin':'round','stroke-linecap':'round',
+      ...(dashIdx.includes(si)?{'stroke-dasharray':'5 4'}:{})}));
+    s.v.forEach((v,i)=>{
+      svg.appendChild(svgEl('circle',{cx:px(i),cy:Y(v),r:3.2,fill:s.c,
+        stroke:cssv('--surface'),'stroke-width':2}));
+    });
+    // rótulo direto no último ponto
+    const last=s.v.length-1;
+    const t=svgEl('text',s.dlTop
+      ?{x:px(last),y:Y(s.v[last])-9,'text-anchor':'middle','font-size':10,'font-weight':600,
+        fill:cssv('--ink'),'font-family':'IBM Plex Mono, monospace'}
+      :{x:px(last)+8,y:Y(s.v[last])+3.5+(s.dy||0),'font-size':10,'font-weight':600,
+        fill:cssv('--ink'),'font-family':'IBM Plex Mono, monospace'});
+    t.textContent=s.dl!==undefined?s.dl:fmt(s.v[last]); svg.appendChild(t);
+  });
+
+  // camada de hover
+  const cross=svgEl('line',{y1:P.t,y2:P.t+PH,stroke:cssv('--ink-3'),'stroke-width':1,
+    'stroke-dasharray':'3 3',opacity:0});
+  svg.appendChild(cross);
+  const hit=svgEl('rect',{x:P.l,y:P.t,width:PW,height:PH,fill:'transparent'});
+  svg.appendChild(hit);
+  box.appendChild(svg);
+
+  const tip=document.createElement('div'); tip.className='tip'; box.appendChild(tip);
+  const px = bars.length?XB:X;
+  function show(i,e){
+    cross.setAttribute('opacity',.55);
+    cross.setAttribute('x1',px(i)); cross.setAttribute('x2',px(i));
+    const rows=[...bars.map(b=>({n:b.n,c:b.c,v:b.lbl?b.lbl(b.v[i]):b.v[i]})),
+                ...series.map(s=>({n:s.n,c:s.c,v:s.tf?s.tf(s.v[i]):fmt(s.v[i])}))];
+    tip.innerHTML=`<div class="th">${labels[i]}</div>`+rows.map(r=>
+      `<div class="tr"><span class="nm"><span class="sw" style="background:${r.c}"></span>${r.n}</span><span>${r.v}</span></div>`).join('');
+    tip.style.left=(px(i)/W*100)+'%';
+    tip.style.top=(P.t-6)+'px';
+    tip.style.opacity=1;
+  }
+  hit.addEventListener('mousemove',e=>{
+    const r=svg.getBoundingClientRect();
+    const sx=(e.clientX-r.left)/r.width*W;
+    let best=0,bd=1e9;
+    for(let i=0;i<n;i++){const d=Math.abs(px(i)-sx); if(d<bd){bd=d;best=i;}}
+    show(best,e);
+  });
+  hit.addEventListener('mouseleave',()=>{tip.style.opacity=0;cross.setAttribute('opacity',0);});
+}
+
+/* ================= instâncias ================= */
+const brl=v=>'R$ '+(v/1000).toFixed(0)+'k';
+const dd=v=>Number(v).toFixed(1).replace('.',',');
+
+chart('c-lt',{labels:SP,fmt:v=>v.toFixed(0),yMax:25,ticks:5,series:[
+  {n:'Lead Time',c:cssv('--s1'),v:D.leadTime,tf:v=>dd(v)+' d',dl:'12,5'},
+  {n:'Cycle Time',c:cssv('--s2'),v:D.cycleTime,tf:v=>dd(v)+' d',dl:'5,3'},
+  {n:'Cycle Time p85',c:cssv('--s3'),v:D.p85,tf:v=>dd(v)+' d',dl:'7,9'}
+]});
+
+chart('c-tp',{labels:SP,fmt:v=>v.toFixed(0),yMax:14,ticks:7,
+  bars:[{n:'Throughput',c:cssv('--s1'),v:D.throughput,lbl:v=>v}],
+  series:[{n:'WIP médio',c:cssv('--s2'),v:D.wip,tf:v=>dd(v),dl:'6,3',dlTop:true}]});
+
+chart('c-ev',{labels:SP,fmt:brl,yMax:100000,ticks:5,series:[
+  {n:'PV — planejado',c:cssv('--s1'),v:D.pv,tf:v=>'R$ '+v.toLocaleString('pt-BR'),dl:'96k',dy:-6},
+  {n:'EV — agregado',c:cssv('--s3'),v:D.ev,tf:v=>'R$ '+v.toLocaleString('pt-BR'),dl:'87k'},
+  {n:'AC — custo real',c:cssv('--s2'),v:D.ac,tf:v=>'R$ '+v.toLocaleString('pt-BR'),dl:'95,5k',dy:11}
+]});
+
+chart('c-bd',{labels:BD_LBL,fmt:v=>v.toFixed(0),yMax:64,ticks:4,dashIdx:[1],series:[
+  {n:'Restante real',c:cssv('--s1'),v:D.bdReal,tf:v=>v+' itens',dl:'6'},
+  {n:'Ideal',c:cssv('--ink-3'),v:D.bdIdeal,tf:v=>v+' itens',dl:'0'}
+]});
+
+chart('c-q',{labels:SP,fmt:v=>v.toFixed(0)+'%',yMax:100,ticks:5,series:[
+  {n:'Cobertura',c:cssv('--s1'),v:D.cobertura,tf:v=>dd(v)+'%',dl:'83%'},
+  {n:'DRE',c:cssv('--s3'),v:D.dre,tf:v=>dd(v)+'%',dl:'86%'}
+]});
+
+chart('c-def',{labels:SP,fmt:v=>v.toFixed(0),yMax:3,ticks:3,series:[],
+  bars:[{n:'Defeitos S1',c:cssv('--bad'),v:D.s1prod,lbl:v=>v}]});
+
+/* ================= tabela de dados ================= */
+const rows=[
+ ['Lead Time médio (dias)',D.leadTime.map(dd)],
+ ['Cycle Time médio (dias)',D.cycleTime.map(dd)],
+ ['Cycle Time p85 (dias)',D.p85.map(dd)],
+ ['Throughput (itens)',D.throughput],
+ ['WIP médio (itens)',D.wip.map(dd)],
+ ['PV acumulado (R$)',D.pv.map(v=>v.toLocaleString('pt-BR'))],
+ ['EV acumulado (R$)',D.ev.map(v=>v.toLocaleString('pt-BR'))],
+ ['AC acumulado (R$)',D.ac.map(v=>v.toLocaleString('pt-BR'))],
+ ['SPI',['0,80','0,81','0,78','0,81','0,85','0,91']],
+ ['CPI',['0,73','0,75','0,73','0,78','0,84','0,91']],
+ ['Escopo restante (itens)',D.bdReal.slice(1)],
+ ['Cobertura crítica (%)',D.cobertura],
+ ['DRE (%)',D.dre.map(dd)],
+ ['Defeitos S1 em produção',D.s1prod]
+];
+document.getElementById('datatables').innerHTML=`
+<div class="panel"><div class="panel-hd"><h3>Série completa do Ciclo 2</h3>
+<p>Mesmos dados dos gráficos, em formato tabular</p></div>
+<div class="tblwrap"><table class="tbl">
+<thead><tr><th>Métrica</th>${SP.map(s=>`<th>${s}</th>`).join('')}</tr></thead>
+<tbody>${rows.map(r=>`<tr><td>${r[0]}</td>${r[1].map(v=>`<td>${v}</td>`).join('')}</tr>`).join('')}</tbody>
+</table></div></div>`;
+
+const btn=document.getElementById('tblbtn'), dt=document.getElementById('datatables');
+btn.addEventListener('click',()=>{
+  const open=dt.hidden;
+  dt.hidden=!open; btn.setAttribute('aria-expanded',String(open));
+  btn.textContent=open?'Ocultar tabela de dados':'Ver dados em tabela';
+});
+</script>
+
+<script>
+(function(){
+  var b=document.getElementById('themebtn'), r=document.documentElement;
+  var modos=['auto','light','dark'], rot={auto:'Tema: automático',light:'Tema: claro',dark:'Tema: escuro'};
+  var i=0;
+  try{ var sv=localStorage.getItem('evs-tema'); if(sv && modos.indexOf(sv)>-1) i=modos.indexOf(sv); }catch(e){}
+  function aplica(){
+    var m=modos[i];
+    if(m==='auto'){ r.removeAttribute('data-theme'); } else { r.setAttribute('data-theme',m); }
+    b.textContent=rot[m];
+    try{ localStorage.setItem('evs-tema',m); }catch(e){}
+  }
+  b.addEventListener('click',function(){ i=(i+1)%modos.length; aplica(); });
+  aplica();
+})();
+</script>
+
+</body>
+</html>
